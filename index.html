@@ -208,16 +208,23 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     width:100%;
     break-inside:avoid;
     page-break-inside:avoid;
-    border:2px solid #111 !important;
+    border:1.5px solid #111 !important;
     box-shadow:none !important;
     display:flex;
     flex-direction:column;
     justify-content:space-between;
-    font-size:8.5px;
-    max-height:91mm;
-    overflow:hidden;
+    font-size:7.5px;
   }
-  .label-nombre{font-size:16px !important;}
+  .label-nombre{font-size:14px !important;}
+  .label-top{padding:5px 10px !important;}
+  .label-dest{padding:7px 10px 7px !important;}
+  .label-dir{font-size:8px !important;line-height:1.5 !important;}
+  .label-contact{font-size:7.5px !important;margin-top:4px !important;padding-top:3px !important;}
+  .label-reclamo{margin:4px 10px 6px !important;padding:5px 8px !important;}
+  .reclamo-text{font-size:7px !important;line-height:1.4 !important;}
+  .label-remitente{padding:5px 10px !important;}
+  .rem-info{font-size:7.5px !important;line-height:1.5 !important;}
+  .label-logo{width:45px !important;height:45px !important;}
   .label-card:not(.selected-for-print){display:none;}
   .btn-print,.btn-sec{display:none !important;}
   .no-print{display:none !important;}
@@ -729,7 +736,7 @@ function labelHTML(c){
   // El mensaje SIEMPRE se muestra en pantalla
   // La clase "no-print" lo oculta solo al imprimir si el toggle está desactivado
   var comentarioHtml=c.comentarios?
-    "<div class='"+(printComentario?"":"no-print")+" label-comentario-wrap' style='margin:7px 0 0;padding:7px 10px;border:1px dashed #aaa;font-size:9.5px;font-style:italic;color:#444;line-height:1.5;'>💬 "+c.comentarios+"</div>":"";
+    "<div class='label-comentario-wrap" + (printComentario?"":" no-print") + "' style='margin:7px 0 0;padding:7px 10px;border:1px dashed #aaa;font-size:9.5px;font-style:italic;color:#444;line-height:1.5;'>💬 "+c.comentarios+"</div>":"";
 
   var isChecked=selectedNums.has(c.num);
   return "<div class='label-wrapper' data-num='"+c.num+"' data-nombre='"+(c.apellido+" "+c.nombre).toLowerCase()+"'>"+
@@ -841,7 +848,13 @@ async function toggleAdmin(){
 
 // Re-render labels when print option changes
 var printToggle=document.getElementById("print-comentario");
-if(printToggle) printToggle.addEventListener("change",async function(){await renderLabels(document.querySelector(".search-input").value||"",false);});
+if(printToggle) printToggle.addEventListener("change",function(){
+  var incluir=this.checked;
+  document.querySelectorAll(".label-comentario-wrap").forEach(function(el){
+    if(incluir) el.classList.remove("no-print");
+    else el.classList.add("no-print");
+  });
+});
 </script>
 </body>
 </html>
