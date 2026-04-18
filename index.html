@@ -131,7 +131,36 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 /* LABELS */
 .labels-grid{display:grid;grid-template-columns:1fr;gap:16px;max-width:520px;margin:0 auto;}
 .label-wrapper{display:flex;align-items:flex-start;gap:12px;}
-.label-checkbox{margin-top:12px;width:18px;height:18px;accent-color:var(--pink);cursor:pointer;flex-shrink:0;}
+.label-checkbox{
+  margin-top:10px;
+  width:28px;
+  height:28px;
+  min-width:28px;
+  cursor:pointer;
+  flex-shrink:0;
+  appearance:none;
+  -webkit-appearance:none;
+  background:#fff;
+  border:2.5px solid #ccc;
+  border-radius:5px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.15s;
+  position:relative;
+}
+.label-checkbox:checked{
+  background:var(--pink);
+  border-color:var(--pink);
+}
+.label-checkbox:checked::after{
+  content:"✓";
+  color:#fff;
+  font-size:18px;
+  font-weight:700;
+  line-height:1;
+  position:absolute;
+}
 .label-card{flex:1;border:2.5px solid #111;background:#fff;display:flex;flex-direction:column;font-family:"Jost",sans-serif;transition:box-shadow 0.2s;}
 .label-card.selected-for-print{box-shadow:0 0 0 3px var(--pink);}
 .label-top{background:#111;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
@@ -168,7 +197,19 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   .labels-grid{display:block;max-width:100%;margin:0;}
   .label-wrapper{display:block;}
   .label-checkbox{display:none;}
-  .label-card{width:100%;margin-bottom:6mm;break-inside:avoid;page-break-inside:avoid;border:2.5px solid #111 !important;box-shadow:none !important;min-height:85mm;display:flex;flex-direction:column;justify-content:space-between;}
+  .label-card{
+    width:100%;
+    height:88mm;
+    margin-bottom:5mm;
+    break-inside:avoid;
+    page-break-inside:avoid;
+    border:2px solid #111 !important;
+    box-shadow:none !important;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    overflow:hidden;
+  }
   .label-card:not(.selected-for-print){display:none;}
   .btn-print,.btn-sec{display:none !important;}
   .no-print{display:none !important;}
@@ -420,7 +461,6 @@ var NETLIFY_FORM    = "ali-mayorista-envios";
 // Trae todas las submissions de Netlify Forms y las convierte al formato interno
 async function fetchNetlifyClients(){
   try{
-    // Llama a la Netlify Function local (evita CORS y oculta el token)
     var r=await fetch("/.netlify/functions/get-clientas");
     var subs=await r.json();
     if(!Array.isArray(subs))return[];
@@ -429,7 +469,7 @@ async function fetchNetlifyClients(){
     return subs.map(function(s,i){
       var d=s.data||{};
       return {
-        num:       parseInt((d.num||"#"+(i+1)).replace(/\D/g,""))||i+1,
+        num:       s.number||i+1,
         nombre:    d.nombre||"",
         apellido:  d.apellido||"",
         dni:       d.dni||"",
@@ -669,6 +709,7 @@ async function confirmAndSend(){
 
 // Labels
 var selectedNums=new Set();
+var allClientsCache=[];
 
 function labelHTML(c){
   var modTag=c.modalidad==="domicilio"?"Envío a domicilio":"Retiro en sucursal";
@@ -706,15 +747,17 @@ function labelHTML(c){
   "</div>";
 }
 
-async function renderLabels(filter){
+async function renderLabels(filter,forceReload){
   var grid=document.getElementById("labels-grid");
   var countLabel=document.getElementById("count-label");
-  countLabel.textContent="Cargando clientas…";
-  grid.innerHTML="<div class='empty-state'><div class='empty-icon'>⏳</div><p>Conectando con Netlify…</p></div>";
-
-  var clients=await fetchNetlifyClients();
-  clients.sort(function(a,b){return (a.apellido+" "+a.nombre).localeCompare(b.apellido+" "+b.nombre,"es");});
-
+  if(!allClientsCache.length||forceReload){
+    countLabel.textContent="Cargando clientas…";
+    grid.innerHTML="<div class='empty-state'><div class='empty-icon'>⏳</div><p>Conectando con Netlify…</p></div>";
+    var fetched=await fetchNetlifyClients();
+    fetched.sort(function(a,b){return (a.apellido+" "+a.nombre).localeCompare(b.apellido+" "+b.nombre,"es");});
+    allClientsCache=fetched;
+  }
+  var clients=allClientsCache;
   countLabel.textContent=clients.length+" clienta"+(clients.length!==1?"s":"")+" registrada"+(clients.length!==1?"s":"");
   if(!clients.length){grid.innerHTML="<div class='empty-state'><div class='empty-icon'>📭</div><p>Todavía no hay clientas registradas.<br>Compartí el formulario para empezar.</p></div>";return;}
   var f=(filter||"").toLowerCase().trim();
@@ -726,7 +769,7 @@ async function renderLabels(filter){
   updateSelection();
 }
 
-function filterLabels(val){renderLabels(val);}
+function filterLabels(val){renderLabels(val,false);}
 
 function toggleSelection(chk,num){
   if(chk.checked) selectedNums.add(num);
@@ -779,9 +822,13 @@ function clearSelection(){
 async function toggleAdmin(){
   var form=document.getElementById("form-card"),admin=document.getElementById("admin-panel");
   var isAdmin=admin.style.display==="block";
+  if(!isAdmin){
+    var clave=prompt("🔒 Ingresá la clave de acceso:");
+    if(clave!=="Comisionista2025"){alert("Clave incorrecta.");return;}
+  }
   form.style.display=isAdmin?"block":"none";
   admin.style.display=isAdmin?"none":"block";
-  if(!isAdmin)await renderLabels("");
+  if(!isAdmin)await renderLabels("",true);
 }
 
 // Re-render labels when print option changes
