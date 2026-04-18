@@ -412,7 +412,7 @@ var LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAB9AAAAfQCAYAAACaOMR5AAAA
 var pendingClient=null;
 
 // ── NETLIFY API CONFIG ────────────────────────────────────────────
-var NETLIFY_TOKEN   = "nfp_Mir6ajtUFvWdDmEujzMmpFFNAmTianqZ5ae3";
+var NETLIFY_TOKEN   = "nfp_wmaYm8aTuNNu3pEKPwZfrRC7Ve1cPqiibfde";
 var NETLIFY_SITE_ID = "c83e2019-e588-4ffd-b3a7-b0f0b2f3bc27";
 var NETLIFY_FORM    = "ali-mayorista-envios";
 // ─────────────────────────────────────────────────────────────────
@@ -420,19 +420,10 @@ var NETLIFY_FORM    = "ali-mayorista-envios";
 // Trae todas las submissions de Netlify Forms y las convierte al formato interno
 async function fetchNetlifyClients(){
   try{
-    // 1. Obtener el form ID por nombre
-    var r1=await fetch("https://api.netlify.com/api/v1/sites/"+NETLIFY_SITE_ID+"/forms",{
-      headers:{"Authorization":"Bearer "+NETLIFY_TOKEN}
-    });
-    var forms=await r1.json();
-    var form=forms.find(function(f){return f.name===NETLIFY_FORM;});
-    if(!form)return[];
-
-    // 2. Traer submissions (máx 200)
-    var r2=await fetch("https://api.netlify.com/api/v1/forms/"+form.id+"/submissions?per_page=200",{
-      headers:{"Authorization":"Bearer "+NETLIFY_TOKEN}
-    });
-    var subs=await r2.json();
+    // Llama a la Netlify Function local (evita CORS y oculta el token)
+    var r=await fetch("/.netlify/functions/get-clientas");
+    var subs=await r.json();
+    if(!Array.isArray(subs))return[];
 
     // 3. Convertir al formato que usa labelHTML()
     return subs.map(function(s,i){
