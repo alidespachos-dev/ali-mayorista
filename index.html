@@ -190,41 +190,48 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
 /* PRINT */
 @media print{
-  @page{size:A4 portrait;margin:6mm;}
+  @page{size:A4 portrait;margin:5mm;}
   body{background:white;}
   .header,.container,#admin-panel .admin-header,.admin-tools,.footer,.admin-toggle,.print-options-box{display:none !important;}
   #admin-panel{display:block !important;padding:0;}
   .labels-grid{display:block;max-width:100%;margin:0;}
   .label-wrapper{display:none;}
-  .label-wrapper:has(.label-card.selected-for-print){display:block;break-inside:avoid;page-break-inside:avoid;}
+  .label-wrapper:has(.label-card.selected-for-print){
+    display:block;
+    break-inside:avoid;
+    page-break-inside:avoid;
+    height:138mm;
+  }
   .label-wrapper:has(.label-card.selected-for-print) + .label-wrapper:has(.label-card.selected-for-print)::before{
     content:"";
     display:block;
     border-top:1.5px dashed #999;
-    margin:3mm 0;
+    height:0;
+    margin:0;
   }
   .label-checkbox{display:none;}
   .label-card{
     width:100%;
+    height:138mm;
     break-inside:avoid;
     page-break-inside:avoid;
-    border:1.5px solid #111 !important;
+    border:2px solid #111 !important;
     box-shadow:none !important;
     display:flex;
     flex-direction:column;
     justify-content:space-between;
-    font-size:7.5px;
+    font-size:11px;
   }
-  .label-nombre{font-size:14px !important;}
-  .label-top{padding:5px 10px !important;}
-  .label-dest{padding:7px 10px 7px !important;}
-  .label-dir{font-size:8px !important;line-height:1.5 !important;}
-  .label-contact{font-size:7.5px !important;margin-top:4px !important;padding-top:3px !important;}
-  .label-reclamo{margin:4px 10px 6px !important;padding:5px 8px !important;}
-  .reclamo-text{font-size:7px !important;line-height:1.4 !important;}
-  .label-remitente{padding:5px 10px !important;}
-  .rem-info{font-size:7.5px !important;line-height:1.5 !important;}
-  .label-logo{width:45px !important;height:45px !important;}
+  .label-nombre{font-size:22px !important;}
+  .label-top{padding:7px 14px !important;font-size:10px !important;}
+  .label-dest{padding:10px 14px 10px !important;}
+  .label-dir{font-size:12px !important;line-height:1.6 !important;}
+  .label-contact{font-size:11px !important;margin-top:6px !important;padding-top:4px !important;}
+  .label-reclamo{margin:6px 14px 8px !important;padding:7px 10px !important;}
+  .reclamo-text{font-size:10px !important;line-height:1.5 !important;}
+  .label-remitente{padding:7px 14px !important;}
+  .rem-info{font-size:11px !important;line-height:1.6 !important;}
+  .label-logo{width:55px !important;height:55px !important;}
   .label-card:not(.selected-for-print){display:none;}
   .btn-print,.btn-sec{display:none !important;}
   .no-print{display:none !important;}
@@ -442,7 +449,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <button class="btn-sec" onclick="clearAll()">Borrar todo</button>
       <button class="btn-sec" onclick="clearSelection()">Limpiar selección</button>
       <button class="btn-sec" onclick="toggleAdmin()">← Volver</button>
-      <button class="btn-print" id="btn-imprimir" onclick="window.print()" disabled>🖨️ Imprimir seleccionadas</button>
+      <button class="btn-print" id="btn-imprimir" onclick="imprimirSeleccionadas()" disabled>🖨️ Imprimir seleccionadas</button>
     </div>
   </div>
   <div class="admin-tools">
@@ -855,6 +862,22 @@ if(printToggle) printToggle.addEventListener("change",function(){
     else el.classList.add("no-print");
   });
 });
+
+async function imprimirSeleccionadas(){
+  // Mostrar TODAS las etiquetas seleccionadas aunque no estén en el filtro actual
+  var grid=document.getElementById("labels-grid");
+  var searchVal=document.querySelector(".search-input").value||"";
+
+  // Si hay búsqueda activa, renderizar sin filtro para mostrar todas las seleccionadas
+  if(searchVal.trim()){
+    await renderLabels("",false);
+  }
+  window.print();
+  // Restaurar el filtro después de imprimir
+  if(searchVal.trim()){
+    await renderLabels(searchVal,false);
+  }
+}
 </script>
 </body>
 </html>
